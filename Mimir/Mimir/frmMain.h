@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "frmAbout.h"
 #include "AdminUtils.h"
+#include "Bubblesort.h"
+
 
 namespace Mimir {
     using namespace System;

@@ -1,5 +1,5 @@
 #include "frmMain.h"
-#include "AdminUtils.h"  // Додано
+#include "AdminUtils.h"  
 
 using namespace System;
 using namespace System::Windows::Forms;
@@ -16,7 +16,7 @@ int main(array<String^>^ args) {
         Application::EnableVisualStyles();
         Application::SetCompatibleTextRenderingDefault(false);
         Mimir::frmMain form;
-        Application::Run(% form);
+        Application::Run(%form);
     }
     catch (Exception^ ex) {
         MessageBox::Show("Помилка: " + ex->Message, "Помилка програми",
