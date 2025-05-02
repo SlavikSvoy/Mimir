@@ -1,257 +1,264 @@
-#pragma once
+ï»¿#pragma once
 #include "frmAbout.h"
 #include "AdminUtils.h"
 
-
 namespace Mimir {
+    using namespace System;
+    using namespace System::Windows::Forms;
+    using namespace System::Drawing;
+    using namespace System::IO;
+    using namespace System::Diagnostics;
 
-	using namespace System;
-	using namespace System::Windows::Forms;
-	using namespace System::Drawing;
-	using namespace System::Diagnostics;
-	using namespace System::IO;
-	using namespace System::Security::Principal;
+    public ref class frmMain : public Form {
+    public:
+        frmMain() {
+            InitializeComponent();
+            InitTreeView();
+        }
 
+    protected:
+        ~frmMain() {}
 
+    private:
+        MenuStrip^ mnsMain;
+        ToolStrip^ tsQuickAccess;
+        ToolStripMenuItem^ tsmiFile;
+        ToolStripMenuItem^ tsmiProcess;
+        ToolStripMenuItem^ tsmiInfo;
 
-	
+        TreeView^ tvMain;
+        ListView^ lvMain;
+        Panel^ pnlInfo;
+        TextBox^ txbInfo;
+        TabControl^ tabControl;
 
+        StatusStrip^ scMain;
+        ToolStripStatusLabel^ tslInfo;
+        ToolStripProgressBar^ tspMain;
 
-	public ref class frmMain : public Form {
-	public:
-		frmMain() {
-			InitializeComponent();
-		}
+        Button^ btnEnableRE;
+        Button^ btnDisableRE;
+        Button^ btnCheckStatus;
+        Button^ btnRebootToRE;
 
-	protected:
-		~frmMain() {}
+        void InitializeComponent(void) {
+            this->Text = "Mimir â€“ ÐœÐµÐ½ÐµÐ´Ð¶ÐµÑ€ Ñ€ÐµÐ¶Ð¸Ð¼Ñƒ Ð²Ñ–Ð´Ð½Ð¾Ð²Ð»ÐµÐ½Ð½Ñ ÐžÐ¡";
+            this->Size = Drawing::Size(1000, 600);
+            this->StartPosition = FormStartPosition::CenterScreen;
+            this->BackColor = Color::LightSteelBlue;
 
-	private:
-		MenuStrip^ mnsMain;
-		ToolStripMenuItem^ tsmiFile;
-		ToolStripMenuItem^ tsmiProcess;
-		ToolStripMenuItem^ tsmiInfo;
-		ToolStripMenuItem^ tsmiExit;
-		ToolStripMenuItem^ tsmiStartProcess;
-		ToolStripMenuItem^ tsmiCancelProcess;
+            // ÐœÐµÐ½ÑŽ
+            mnsMain = gcnew MenuStrip();
+            tsmiFile = gcnew ToolStripMenuItem("Ð¤Ð°Ð¹Ð»");
+            tsmiProcess = gcnew ToolStripMenuItem("ÐŸÑ€Ð¾Ñ†ÐµÑ");
+            tsmiInfo = gcnew ToolStripMenuItem("Ð†Ð½Ñ„Ð¾Ñ€Ð¼Ð°Ñ†Ñ–Ñ");
 
-		ToolStrip^ tsMain;
-		ToolStripButton^ tsbNew;
-		ToolStripButton^ tsbOpen;
-		ToolStripButton^ tsbSave;
-		ToolStripButton^ tsbExecute;
-		ToolStripButton^ tsbCancel;
-		ToolStripButton^ tsbAbout;
+            tsmiFile->DropDownItems->AddRange(gcnew array<ToolStripItem^> {
+                gcnew ToolStripMenuItem("ÐÐ¾Ð²Ð¸Ð¹", nullptr, gcnew EventHandler(this, &frmMain::NewFile)),
+                    gcnew ToolStripMenuItem("Ð’Ñ–Ð´ÐºÑ€Ð¸Ñ‚Ð¸", nullptr, gcnew EventHandler(this, &frmMain::OpenFile)),
+                    gcnew ToolStripMenuItem("Ð—Ð±ÐµÑ€ÐµÐ³Ñ‚Ð¸", nullptr, gcnew EventHandler(this, &frmMain::SaveFile)),
+                    gcnew ToolStripMenuItem("Ð’Ð¸Ñ…Ñ–Ð´", nullptr, gcnew EventHandler(this, &frmMain::ExitApplication))
+            });
+            tsmiProcess->DropDownItems->AddRange(gcnew array<ToolStripItem^> {
+                gcnew ToolStripMenuItem("Ð’Ð¸ÐºÐ¾Ð½Ð°Ñ‚Ð¸", nullptr, gcnew EventHandler(this, &frmMain::btnEnableRE_Click)),
+                    gcnew ToolStripMenuItem("Ð’Ñ–Ð´Ð¼Ñ–Ð½Ð°", nullptr, gcnew EventHandler(this, &frmMain::btnDisableRE_Click))
+            });
+            tsmiInfo->DropDownItems->Add(gcnew ToolStripMenuItem("ÐŸÑ€Ð¾ Ð¿Ñ€Ð¾Ð³Ñ€Ð°Ð¼Ñƒ", nullptr, gcnew EventHandler(this, &frmMain::ShowAbout)));
 
-		TreeView^ tvMain;
-		ListView^ lvMain;
+            mnsMain->Items->AddRange(gcnew array<ToolStripItem^>{ tsmiFile, tsmiProcess, tsmiInfo });
+            mnsMain->Dock = DockStyle::Top;
+            this->MainMenuStrip = mnsMain;
+            this->Controls->Add(mnsMain);
 
-		Panel^ pnlInfo;
-		Label^ lblInfo;
-		TextBox^ txbInfo;
+            // ÐŸÐ°Ð½ÐµÐ»ÑŒ ÑˆÐ²Ð¸Ð´ÐºÐ¾Ð³Ð¾ Ð´Ð¾ÑÑ‚ÑƒÐ¿Ñƒ
+            tsQuickAccess = gcnew ToolStrip();
+            tsQuickAccess->Dock = DockStyle::Top;
+            tsQuickAccess->Items->AddRange(gcnew array<ToolStripItem^> {
+                gcnew ToolStripButton("ÐÐ¾Ð²Ð¸Ð¹", nullptr, gcnew EventHandler(this, &frmMain::NewFile)),
+                    gcnew ToolStripButton("Ð’Ñ–Ð´ÐºÑ€Ð¸Ñ‚Ð¸", nullptr, gcnew EventHandler(this, &frmMain::OpenFile)),
+                    gcnew ToolStripButton("Ð—Ð±ÐµÑ€ÐµÐ³Ñ‚Ð¸", nullptr, gcnew EventHandler(this, &frmMain::SaveFile)),
+                    gcnew ToolStripButton("Ð’Ð¸ÐºÐ¾Ð½Ð°Ñ‚Ð¸", nullptr, gcnew EventHandler(this, &frmMain::btnEnableRE_Click)),
+                    gcnew ToolStripButton("Ð’Ñ–Ð´Ð¼Ñ–Ð½Ð°", nullptr, gcnew EventHandler(this, &frmMain::btnDisableRE_Click)),
+                    gcnew ToolStripButton("ÐŸÑ€Ð¾ Ð¿Ñ€Ð¾Ð³Ñ€Ð°Ð¼Ñƒ", nullptr, gcnew EventHandler(this, &frmMain::ShowAbout))
+            });
+            this->Controls->Add(tsQuickAccess);
 
-		StatusStrip^ scMain;
-		ToolStripStatusLabel^ tslInfo;
-		ToolStripProgressBar^ tspMain;
+            // TreeView
+            tvMain = gcnew TreeView();
+            tvMain->Location = Point(10, 80);
+            tvMain->Size = Drawing::Size(200, 400);
+            tvMain->AfterSelect += gcnew TreeViewEventHandler(this, &frmMain::tvMain_AfterSelect);
+            this->Controls->Add(tvMain);
 
-		Button^ btnCheckStatus;
-		Button^ btnEnableRE;
-		Button^ btnDisableRE;
-		Button^ btnRebootToRE;
+            // ListView
+            lvMain = gcnew ListView();
+            lvMain->Location = Point(220, 80);
+            lvMain->Size = Drawing::Size(350, 400);
+            lvMain->View = View::Details;
+            lvMain->Columns->Add("ÐÐ°Ð·Ð²Ð°", 150);
+            lvMain->Columns->Add("Ð¢Ð¸Ð¿", 100);
+            lvMain->Columns->Add("Ð Ð¾Ð·Ð¼Ñ–Ñ€", 80);
+            this->Controls->Add(lvMain);
 
-		void InitializeComponent(void) {
-			this->Text = "Mimir – Ìåíåäæåð ðåæèìó â³äíîâëåííÿ ÎÑ";
-			this->Size = Drawing::Size(900, 600);
-			this->StartPosition = FormStartPosition::CenterScreen;
-			this->BackColor = Color::LightSkyBlue;
-			this->Icon = gcnew System::Drawing::Icon("logo.ico");
+            // ÐŸÐ°Ð½ÐµÐ»ÑŒ Ñ–Ð½Ñ„Ð¾Ñ€Ð¼Ð°Ñ†Ñ–Ñ—
+            pnlInfo = gcnew Panel();
+            pnlInfo->Location = Point(580, 80);
+            pnlInfo->Size = Drawing::Size(390, 120);
+            pnlInfo->BackColor = Color::LightSlateGray;
+            txbInfo = gcnew TextBox();
+            txbInfo->Multiline = true;
+            txbInfo->ScrollBars = ScrollBars::Vertical;
+            txbInfo->Dock = DockStyle::Fill;
+            pnlInfo->Controls->Add(txbInfo);
+            this->Controls->Add(pnlInfo);
 
-			mnsMain = gcnew MenuStrip();
-			tsmiFile = gcnew ToolStripMenuItem("Ôàéë");
-			tsmiProcess = gcnew ToolStripMenuItem("Ïðîöåñ");
-			tsmiInfo = gcnew ToolStripMenuItem("²íôîðìàö³ÿ");
-			tsmiExit = gcnew ToolStripMenuItem("Âèõ³ä");
-			tsmiStartProcess = gcnew ToolStripMenuItem("Âèêîíàòè");
-			tsmiCancelProcess = gcnew ToolStripMenuItem("Ñêàñóâàòè");
+            // ÐšÐ½Ð¾Ð¿ÐºÐ¸
+            btnCheckStatus = gcnew Button();
+            btnCheckStatus->Text = "ÐŸÐµÑ€ÐµÐ²Ñ–Ñ€Ð¸Ñ‚Ð¸ ÑÑ‚Ð°Ñ‚ÑƒÑ";
+            btnCheckStatus->Location = Point(600, 220);
+            btnCheckStatus->Click += gcnew EventHandler(this, &frmMain::btnCheckStatus_Click);
 
-			ToolStripMenuItem^ tsmiAbout = gcnew ToolStripMenuItem("Ïðî çàñòîñóíîê");
-			tsmiAbout->Click += gcnew EventHandler(this, &frmMain::ShowAbout);
+            btnEnableRE = gcnew Button();
+            btnEnableRE->Text = "Ð£Ð²Ñ–Ð¼ÐºÐ½ÑƒÑ‚Ð¸ RE";
+            btnEnableRE->Location = Point(600, 260);
+            btnEnableRE->Click += gcnew EventHandler(this, &frmMain::btnEnableRE_Click);
 
-			tsmiFile->DropDownItems->Add(tsmiExit);
-			tsmiProcess->DropDownItems->Add(tsmiStartProcess);
-			tsmiProcess->DropDownItems->Add(tsmiCancelProcess);
-			tsmiInfo->DropDownItems->Add(tsmiAbout);
+            btnDisableRE = gcnew Button();
+            btnDisableRE->Text = "Ð’Ð¸Ð¼ÐºÐ½ÑƒÑ‚Ð¸ RE";
+            btnDisableRE->Location = Point(600, 300);
+            btnDisableRE->Click += gcnew EventHandler(this, &frmMain::btnDisableRE_Click);
 
-			tsmiExit->Click += gcnew EventHandler(this, &frmMain::ExitApplication);
-			tsmiStartProcess->Click += gcnew EventHandler(this, &frmMain::btnEnableRE_Click);
-			tsmiCancelProcess->Click += gcnew EventHandler(this, &frmMain::btnDisableRE_Click);
+            btnRebootToRE = gcnew Button();
+            btnRebootToRE->Text = "REBOOT";
+            btnRebootToRE->BackColor = Color::Red;
+            btnRebootToRE->Location = Point(600, 340);
+            btnRebootToRE->Size = Drawing::Size(120, 40);
+            btnRebootToRE->Click += gcnew EventHandler(this, &frmMain::btnRebootToRE_Click);
 
-			mnsMain->Items->AddRange(gcnew array<ToolStripItem^>{ tsmiFile, tsmiProcess, tsmiInfo });
-			this->MainMenuStrip = mnsMain;
-			this->Controls->Add(mnsMain);
+            this->Controls->Add(btnCheckStatus);
+            this->Controls->Add(btnEnableRE);
+            this->Controls->Add(btnDisableRE);
+            this->Controls->Add(btnRebootToRE);
 
-			tsMain = gcnew ToolStrip();
-			tsbNew = gcnew ToolStripButton("New");
-			tsbOpen = gcnew ToolStripButton("Open");
-			tsbSave = gcnew ToolStripButton("Save");
-			tsbExecute = gcnew ToolStripButton("Execute");
-			tsbCancel = gcnew ToolStripButton("Cancel");
-			tsbAbout = gcnew ToolStripButton("About");
-			tsbAbout->Click += gcnew EventHandler(this, &frmMain::ShowAbout);
+            // Ð¡Ñ‚Ð°Ñ‚ÑƒÑ Ð±Ð°Ñ€
+            scMain = gcnew StatusStrip();
+            tslInfo = gcnew ToolStripStatusLabel("Ð“Ð¾Ñ‚Ð¾Ð²Ð¾");
+            tspMain = gcnew ToolStripProgressBar();
+            tspMain->Size = Drawing::Size(150, 16);
+            scMain->Items->Add(tslInfo);
+            scMain->Items->Add(tspMain);
+            this->Controls->Add(scMain);
+        }
 
-			tsbNew->Click += gcnew EventHandler(this, &frmMain::NewFile);
-			tsbOpen->Click += gcnew EventHandler(this, &frmMain::OpenFile);
-			tsbSave->Click += gcnew EventHandler(this, &frmMain::SaveFile);
-			tsbExecute->Click += gcnew EventHandler(this, &frmMain::btnEnableRE_Click);
-			tsbCancel->Click += gcnew EventHandler(this, &frmMain::btnDisableRE_Click);
+        void InitTreeView() {
+            tvMain->Nodes->Clear();
+            for each (String ^ drive in Directory::GetLogicalDrives()) {
+                TreeNode^ root = gcnew TreeNode(drive);
+                root->Nodes->Add(gcnew TreeNode("..."));
+                tvMain->Nodes->Add(root);
+            }
+            tvMain->BeforeExpand += gcnew TreeViewCancelEventHandler(this, &frmMain::tvMain_BeforeExpand);
+        }
 
-			tsMain->Items->AddRange(gcnew array<ToolStripItem^>{
-				tsbNew, tsbOpen, tsbSave, tsbExecute, tsbCancel, tsbAbout
-			});
-			tsMain->Location = Point(0, 24);
-			this->Controls->Add(tsMain);
+        void tvMain_BeforeExpand(Object^ sender, TreeViewCancelEventArgs^ e) {
+            TreeNode^ node = e->Node;
+            if (node->Nodes->Count == 1 && node->Nodes[0]->Text == "...") {
+                node->Nodes->Clear();
+                try {
+                    for each (String ^ dir in Directory::GetDirectories(node->FullPath)) {
+                        TreeNode^ sub = gcnew TreeNode(Path::GetFileName(dir));
+                        sub->Nodes->Add(gcnew TreeNode("..."));
+                        node->Nodes->Add(sub);
+                    }
+                }
+                catch (...) {}
+            }
+        }
 
-			tvMain = gcnew TreeView();
-			tvMain->Location = Point(10, 60);
-			tvMain->Size = Drawing::Size(200, 400);
-			this->Controls->Add(tvMain);
+        void tvMain_AfterSelect(Object^ sender, TreeViewEventArgs^ e) {
+            lvMain->Items->Clear();
+            try {
+                for each (String ^ dir in Directory::GetDirectories(e->Node->FullPath)) {
+                    ListViewItem^ item = gcnew ListViewItem(Path::GetFileName(dir));
+                    item->SubItems->Add("ÐŸÐ°Ð¿ÐºÐ°");
+                    item->SubItems->Add("");
+                    lvMain->Items->Add(item);
+                }
+                for each (String ^ file in Directory::GetFiles(e->Node->FullPath)) {
+                    FileInfo^ fi = gcnew FileInfo(file);
+                    ListViewItem^ item = gcnew ListViewItem(fi->Name);
+                    item->SubItems->Add("Ð¤Ð°Ð¹Ð»");
+                    item->SubItems->Add(fi->Length.ToString());
+                    lvMain->Items->Add(item);
+                }
+            }
+            catch (...) {}
+        }
 
-			lvMain = gcnew ListView();
-			lvMain->Location = Point(220, 60);
-			lvMain->Size = Drawing::Size(300, 400);
-			this->Controls->Add(lvMain);
+        String^ ExecuteCommand(String^ command) {
+            ProcessStartInfo^ psi = gcnew ProcessStartInfo("cmd.exe", "/c " + command);
+            psi->RedirectStandardOutput = true;
+            psi->UseShellExecute = false;
+            psi->CreateNoWindow = true;
+            Process^ proc = Process::Start(psi);
+            String^ output = proc->StandardOutput->ReadToEnd();
+            proc->WaitForExit();
+            return output;
+        }
 
-			btnCheckStatus = gcnew Button();
-			btnCheckStatus->Text = "Ïåðåâ³ðèòè ñòàòóñ";
-			btnCheckStatus->Location = Point(550, 200);
-			btnCheckStatus->Click += gcnew EventHandler(this, &frmMain::btnCheckStatus_Click);
+        void ShowAbout(Object^ sender, EventArgs^ e) {
+            frmAbout^ aboutForm = gcnew frmAbout();
+            aboutForm->ShowDialog();
+        }
 
-			btnEnableRE = gcnew Button();
-			btnEnableRE->Text = "Óâ³ìêíóòè RE";
-			btnEnableRE->Location = Point(550, 240);
-			btnEnableRE->Click += gcnew EventHandler(this, &frmMain::btnEnableRE_Click);
+        void ExitApplication(Object^ sender, EventArgs^ e) {
+            Application::Exit();
+        }
 
-			btnDisableRE = gcnew Button();
-			btnDisableRE->Text = "Âèìêíóòè RE";
-			btnDisableRE->Location = Point(550, 280);
-			btnDisableRE->Click += gcnew EventHandler(this, &frmMain::btnDisableRE_Click);
+        void btnCheckStatus_Click(Object^ sender, EventArgs^ e) {
+            tspMain->Visible = true;
+            tspMain->Style = ProgressBarStyle::Marquee;
+            txbInfo->Text = ExecuteCommand("reagentc /info");
+            tspMain->Visible = false;
+            tslInfo->Text = "ÐŸÐµÑ€ÐµÐ²Ñ–Ñ€ÐµÐ½Ð¾ ÑÑ‚Ð°Ñ‚ÑƒÑ.";
+        }
 
-			btnRebootToRE = gcnew Button();
-			btnRebootToRE->Text = "REBOOT";
-			btnRebootToRE->Location = Point(550, 320);
-			btnRebootToRE->Size = Drawing::Size(120, 40); // Çá³ëüøåíèé ðîçì³ð êíîïêè
-			btnRebootToRE->BackColor = Color::Red; // ×åðâîíèé êîë³ð ôîíó
-			btnRebootToRE->Font = gcnew Drawing::Font("Segoe UI", 12, FontStyle::Bold); // Çá³ëüøåíèé ³ æèðíèé øðèôò
-			btnRebootToRE->Click += gcnew EventHandler(this, &frmMain::btnRebootToRE_Click);
+        void btnEnableRE_Click(Object^ sender, EventArgs^ e) {
+            txbInfo->Text = ExecuteCommand("reagentc /enable");
+            tslInfo->Text = "RE ÑƒÐ²Ñ–Ð¼ÐºÐ½ÐµÐ½Ð¾.";
+        }
 
-			ToolTip^ toolTip = gcnew ToolTip();
-			toolTip->SetToolTip(btnEnableRE, "Óâ³ìêíåííÿ ñåðåäîâèùà â³äíîâëåííÿ (RE).");
-			toolTip->SetToolTip(btnDisableRE, "Âèìêíåííÿ ñåðåäîâèùà â³äíîâëåííÿ (RE).");
-			toolTip->SetToolTip(btnCheckStatus, "Ïåðåâ³ðêà ïîòî÷íîãî ñòàíó ñåðåäîâèùà â³äíîâëåííÿ.");
-			toolTip->SetToolTip(btnRebootToRE, "Ïåðåçàâàíòàæåííÿ ñèñòåìè â ñåðåäîâèùå â³äíîâëåííÿ.");
+        void btnDisableRE_Click(Object^ sender, EventArgs^ e) {
+            txbInfo->Text = ExecuteCommand("reagentc /disable");
+            tslInfo->Text = "RE Ð²Ð¸Ð¼ÐºÐ½ÐµÐ½Ð¾.";
+        }
 
-			this->Controls->Add(btnCheckStatus);
-			this->Controls->Add(btnEnableRE);
-			this->Controls->Add(btnDisableRE);
-			this->Controls->Add(btnRebootToRE);
+        void btnRebootToRE_Click(Object^ sender, EventArgs^ e) {
+            ExecuteCommand("shutdown /r /o /f /t 0");
+            tslInfo->Text = "reboot";
+        }
 
-			pnlInfo = gcnew Panel();
-			pnlInfo->Location = Point(530, 60);
-			pnlInfo->Size = Drawing::Size(340, 100);
-			pnlInfo->BackColor = Color::SteelBlue;
+        void NewFile(Object^ sender, EventArgs^ e) {
+            txbInfo->Clear();
+            tslInfo->Text = "ÐÐ¾Ð²Ð¸Ð¹ Ñ„Ð°Ð¹Ð».";
+        }
 
-			lblInfo = gcnew Label();
-			lblInfo->Text = "Îáñÿã îáðîáêè:";
-			lblInfo->ForeColor = Color::White;
-			lblInfo->Location = Point(10, 10);
-			lblInfo->Size = Drawing::Size(120, 20);
+        void OpenFile(Object^ sender, EventArgs^ e) {
+            OpenFileDialog^ ofd = gcnew OpenFileDialog();
+            ofd->Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+            if (ofd->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
+                txbInfo->Text = File::ReadAllText(ofd->FileName);
+                tslInfo->Text = "Ð¤Ð°Ð¹Ð» Ð²Ñ–Ð´ÐºÑ€Ð¸Ñ‚Ð¾.";
+            }
+        }
 
-			txbInfo = gcnew TextBox();
-			txbInfo->Location = Point(10, 40);
-			txbInfo->Size = Drawing::Size(320, 50);
-			txbInfo->Multiline = true;
-			txbInfo->ScrollBars = ScrollBars::Vertical;
-
-			pnlInfo->Controls->Add(lblInfo);
-			pnlInfo->Controls->Add(txbInfo);
-			this->Controls->Add(pnlInfo);
-
-			scMain = gcnew StatusStrip();
-			tslInfo = gcnew ToolStripStatusLabel("Ãîòîâî");
-			tspMain = gcnew ToolStripProgressBar();
-			tspMain->Size = Drawing::Size(150, 16);
-			scMain->Items->Add(tslInfo);
-			scMain->Items->Add(tspMain);
-			scMain->Location = Point(0, this->ClientSize.Height - 22);
-			scMain->Anchor = AnchorStyles::Bottom | AnchorStyles::Left | AnchorStyles::Right;
-			this->Controls->Add(scMain);
-		}
-
-		String^ ExecuteCommand(String^ command) {
-			ProcessStartInfo^ psi = gcnew ProcessStartInfo("cmd.exe", "/c " + command);
-			psi->RedirectStandardOutput = true;
-			psi->UseShellExecute = false;
-			psi->CreateNoWindow = true;
-			Process^ proc = Process::Start(psi);
-			String^ output = proc->StandardOutput->ReadToEnd();
-			proc->WaitForExit();
-			return output;
-		}
-
-		void ShowAbout(Object^ sender, EventArgs^ e) {
-			frmAbout^ aboutForm = gcnew frmAbout();
-			aboutForm->ShowDialog();
-		}
-
-		void ExitApplication(Object^ sender, EventArgs^ e) {
-			Application::Exit();
-		}
-
-		void btnCheckStatus_Click(Object^ sender, EventArgs^ e) {
-			tspMain->Visible = true;
-			tspMain->Style = ProgressBarStyle::Marquee;
-			txbInfo->Text = ExecuteCommand("reagentc /info");
-			tspMain->Visible = false;
-			tslInfo->Text = "Ïåðåâ³ðåíî ñòàòóñ.";
-		}
-
-		void btnEnableRE_Click(Object^ sender, EventArgs^ e) {
-			txbInfo->Text = ExecuteCommand("reagentc /enable");
-			tslInfo->Text = "RE óâ³ìêíåíî.";
-		}
-
-
-		void btnDisableRE_Click(Object^ sender, EventArgs^ e) {
-			txbInfo->Text = ExecuteCommand("reagentc /disable");
-			tslInfo->Text = "RE âèìêíåíî.";
-		}
-
-		void btnRebootToRE_Click(Object^ sender, EventArgs^ e) {
-			ExecuteCommand("shutdown /r /o /f /t 0");
-			tslInfo->Text = "reboot";
-		}
-
-		void NewFile(Object^ sender, EventArgs^ e) {
-			txbInfo->Clear();
-			tslInfo->Text = "Íîâèé ôàéë.";
-		}
-
-		void OpenFile(Object^ sender, EventArgs^ e) {
-			OpenFileDialog^ ofd = gcnew OpenFileDialog();
-			ofd->Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
-			if (ofd->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
-				txbInfo->Text = File::ReadAllText(ofd->FileName);
-				tslInfo->Text = "Ôàéë â³äêðèòî.";
-			}
-		}
-
-		void SaveFile(Object^ sender, EventArgs^ e) {
-			SaveFileDialog^ sfd = gcnew SaveFileDialog();
-			sfd->Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
-			if (sfd->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
-				File::WriteAllText(sfd->FileName, txbInfo->Text);
-				tslInfo->Text = "Ôàéë çáåðåæåíî.";
-			}
-		}
-	};
+        void SaveFile(Object^ sender, EventArgs^ e) {
+            SaveFileDialog^ sfd = gcnew SaveFileDialog();
+            sfd->Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+            if (sfd->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
+                File::WriteAllText(sfd->FileName, txbInfo->Text);
+                tslInfo->Text = "Ð¤Ð°Ð¹Ð» Ð·Ð±ÐµÑ€ÐµÐ¶ÐµÐ½Ð¾.";
+            }
+        }
+    };
 }
