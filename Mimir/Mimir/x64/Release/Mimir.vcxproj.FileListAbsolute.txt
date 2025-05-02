@@ -1,4 +1,0 @@
-G:\Univer\3 kurs\oc\cursova\Mimir\Mimir\x64\Release\Mimir.vcxproj.AssemblyReference.cache
-G:\Univer\3 kurs\oc\cursova\Mimir\Mimir\x64\Release\Mimir.frmAbout.resources
-G:\Univer\3 kurs\oc\cursova\Mimir\Mimir\x64\Release\Mimir.frmMain.resources
-G:\Univer\3 kurs\oc\cursova\Mimir\Mimir\x64\Release\Mimir.vcxproj.GenerateResource.cache
